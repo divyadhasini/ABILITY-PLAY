@@ -254,7 +254,9 @@ export const App: React.FC = () => {
                 </span>
               </div>
               <span className="text-xs text-slate-400">
-                Tracking shoulder, elbow & wrist vectors
+                {appMode === 'jump'
+                  ? 'Tracking knee (Hip → Knee → Ankle) & jump vectors'
+                  : 'Tracking shoulder, elbow & wrist vectors'}
               </span>
             </div>
 
@@ -263,7 +265,7 @@ export const App: React.FC = () => {
               setCameraState={setCameraState}
               thresholdAngle={gameParams.successThresholdAngle}
               onPoseUpdate={handlePoseUpdate}
-              isJumpingMode={appMode === 'jump'}
+              appMode={appMode}
             />
           </div>
 
@@ -309,6 +311,7 @@ export const App: React.FC = () => {
           sessionStats={sessionStats}
           angleData={currentAngleData}
           personalBaseline={baseline.maxShoulderAngle}
+          appMode={appMode}
         />
       </main>
 

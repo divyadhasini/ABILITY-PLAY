@@ -44,10 +44,11 @@ SESSION TELEMETRY & PROGRESSIVE GAMIFICATION (Score, Streaks, % of Baseline)
 - Real-time skeleton overlay with glowing active joint vectors and live angular degree HUD callouts.
 
 ### 2. 📐 Joint Angle Vector Mathematics
-- Calculates shoulder elevation and arm abduction using vector dot-product geometry:
+- Calculates joint angles (Shoulder & Knee) using vector dot-product geometry:
   $$\vec{BA} = A - B, \quad \vec{BC} = C - B$$
   $$\cos(\theta) = \frac{\vec{BA} \cdot \vec{BC}}{\|\vec{BA}\| \|\vec{BC}\|}, \quad \theta = \arccos(\text{clamp}(\cos(\theta), -1, 1)) \times \frac{180}{\pi}$$
-- Continuously measures the child's shoulder elevation relative to their torso and arm joints.
+- **Adaptive Basketball**: Computes **Shoulder Elevation / Arm Abduction** angle between Torso $\rightarrow$ Shoulder and Shoulder $\rightarrow$ Elbow/Wrist.
+- **Jump Mode**: Computes **Knee Joint Angle** $\text{Angle}(\text{Hip}, \text{Knee}, \text{Ankle})$ measuring dynamic knee flexion (squat dip) and extension during jump takeoff.
 
 ### 3. ⚖️ Personal Baseline Calibration
 - When clicking **"Start Assessment"**, a 6-second calibration routine tracks the child's natural, comfortable movement.
@@ -66,9 +67,9 @@ The game parameters deterministically adjust based on the child's personal basel
 - Smooth parabolic ball physics, net swish animation, celebration confetti, and synthesized Web Audio sound effects.
 - Dynamic stretch progress bar shows how close the child is to releasing their next shot.
 
-### 6. 🏃 Mini-Demo: Jump Mode
+### 6. 🏃 Mini-Demo: Jump Mode (Lower-Limb Rehabilitation)
 - Proves that the **same body movement engine** powers multiple sport experiences.
-- Tracks vertical displacement of hips & ankles to detect physical jumps and bounce the on-screen runner.
+- Tracks **Knee Flexion/Extension Angles** $\text{Angle}(\text{Hip}, \text{Knee}, \text{Ankle})$ alongside vertical hip & shoulder momentum to detect physical jumps and bounce the on-screen runner.
 
 ### 7. 📊 Session Performance Analytics
 - Displays at the end of each rehabilitation session:

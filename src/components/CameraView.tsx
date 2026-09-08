@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
-import type { NormalizedLandmark, JointAngleData, CameraState } from '../types';
+import type { NormalizedLandmark, JointAngleData, CameraState, AppMode } from '../types';
 import { initializePoseLandmarker, generateSimulatedPoseLandmarks } from '../utils/poseService';
 import { computeJointAngles, checkUserInFrame } from '../utils/poseMath';
 import { PoseOverlay } from './PoseOverlay';
@@ -11,7 +11,7 @@ interface CameraViewProps {
   setCameraState: React.Dispatch<React.SetStateAction<CameraState>>;
   thresholdAngle: number;
   onPoseUpdate: (landmarks: NormalizedLandmark[] | null, angleData: JointAngleData | null) => void;
-  isJumpingMode?: boolean;
+  appMode?: AppMode;
 }
 
 export const CameraView: React.FC<CameraViewProps> = ({
@@ -19,7 +19,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
   setCameraState,
   thresholdAngle,
   onPoseUpdate,
-  isJumpingMode = false,
+  appMode = 'basketball',
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -32,6 +32,8 @@ export const CameraView: React.FC<CameraViewProps> = ({
   const [landmarks, setLandmarks] = useState<NormalizedLandmark[] | null>(null);
   const [angleData, setAngleData] = useState<JointAngleData | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 640, height: 480 });
+
+  const isJumpingMode = appMode === 'jump';
 
   // Update container dimensions for responsive canvas matching
   useEffect(() => {
@@ -250,39 +252,56 @@ export const CameraView: React.FC<CameraViewProps> = ({
         width={containerSize.width}
         height={containerSize.height}
         isMirrored={!cameraState.demoMode}
+        appMode={appMode}
       />
 
       {/* Real-time Movement Angle HUD */}
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end pointer-events-none">
-        <div className="px-3.5 py-2 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-700/60 shadow-lg text-right">
+        <div className="px-3.5 py-2 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/60 shadow-lg text-right">
           <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-            Shoulder Angle
+            {isJumpingMode ? 'Knee Angle (Hip-Knee-Ankle)' : 'Shoulder Angle'}
           </div>
           <div className="flex items-baseline justify-end gap-1">
             <span
               className={`text-2xl font-black ${
-                angleData && angleData.activeAngle >= thresholdAngle
+                isJumpingMode
+                  ? 'text-purple-300'
+                  : angleData && angleData.activeAngle >= thresholdAngle
                   ? 'text-emerald-400'
                   : 'text-sky-300'
               }`}
             >
-              {angleData ? `${angleData.activeAngle}°` : '--°'}
+              {isJumpingMode
+                ? angleData
+                  ? `${angleData.activeKneeAngle}°`
+                  : '--°'
+                : angleData
+                ? `${angleData.activeAngle}°`
+                : '--°'}
             </span>
             <span className="text-xs text-slate-400">
-              / target {thresholdAngle}°
+              {isJumpingMode ? '(Extension/Flexion)' : `/ target ${thresholdAngle}°`}
             </span>
           </div>
           <div className="w-full bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
             <div
               className={`h-full transition-all duration-150 ${
-                angleData && angleData.activeAngle >= thresholdAngle
+                isJumpingMode
+                  ? 'bg-gradient-to-r from-purple-500 to-cyan-300'
+                  : angleData && angleData.activeAngle >= thresholdAngle
                   ? 'bg-gradient-to-r from-emerald-500 to-green-300 shadow-sm shadow-emerald-400'
                   : 'bg-gradient-to-r from-blue-500 to-sky-400'
               }`}
               style={{
                 width: `${Math.min(
                   100,
-                  angleData ? (angleData.activeAngle / thresholdAngle) * 100 : 0
+                  isJumpingMode
+                    ? angleData
+                      ? (angleData.activeKneeAngle / 180) * 100
+                      : 0
+                    : angleData
+                    ? (angleData.activeAngle / thresholdAngle) * 100
+                    : 0
                 )}%`,
               }}
             />
@@ -294,7 +313,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
       {!cameraState.demoMode && cameraState.isStreaming && !cameraState.userInFrame && (
         <div className="absolute bottom-4 inset-x-4 mx-auto max-w-sm z-20 px-3.5 py-2.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2.5 backdrop-blur-md shadow-xl animate-bounce">
           <Eye size={18} className="shrink-0 text-amber-400" />
-          <span>Please step back so your arms and upper body are fully visible.</span>
+          <span>Please step back so your body and legs are fully visible.</span>
         </div>
       )}
 

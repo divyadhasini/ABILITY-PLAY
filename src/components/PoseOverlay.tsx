@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { NormalizedLandmark, JointAngleData } from '../types';
+import type { NormalizedLandmark, JointAngleData, AppMode } from '../types';
 import { POSE_LANDMARKS } from '../utils/poseMath';
 
 interface PoseOverlayProps {
@@ -9,6 +9,7 @@ interface PoseOverlayProps {
   width: number;
   height: number;
   isMirrored?: boolean;
+  appMode?: AppMode;
 }
 
 const POSE_CONNECTIONS: [number, number][] = [
@@ -38,6 +39,7 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
   width,
   height,
   isMirrored = true,
+  appMode = 'basketball',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -77,6 +79,12 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
         (startIdx === POSE_LANDMARKS.RIGHT_SHOULDER && endIdx === POSE_LANDMARKS.RIGHT_ELBOW) ||
         (startIdx === POSE_LANDMARKS.RIGHT_ELBOW && endIdx === POSE_LANDMARKS.RIGHT_WRIST);
 
+      const isLegConnection =
+        (startIdx === POSE_LANDMARKS.LEFT_HIP && endIdx === POSE_LANDMARKS.LEFT_KNEE) ||
+        (startIdx === POSE_LANDMARKS.LEFT_KNEE && endIdx === POSE_LANDMARKS.LEFT_ANKLE) ||
+        (startIdx === POSE_LANDMARKS.RIGHT_HIP && endIdx === POSE_LANDMARKS.RIGHT_KNEE) ||
+        (startIdx === POSE_LANDMARKS.RIGHT_KNEE && endIdx === POSE_LANDMARKS.RIGHT_ANKLE);
+
       const isActiveArmConnection =
         (activeArm === 'left' &&
           (startIdx === POSE_LANDMARKS.LEFT_SHOULDER || startIdx === POSE_LANDMARKS.LEFT_ELBOW)) ||
@@ -87,25 +95,40 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       ctx.moveTo(getX(p1.x), getY(p1.y));
       ctx.lineTo(getX(p2.x), getY(p2.y));
 
-      if (isActiveArmConnection && isAboveThreshold) {
-        ctx.strokeStyle = '#22c55e'; // Green when successful
-        ctx.shadowColor = '#22c55e';
-        ctx.shadowBlur = 12;
-        ctx.lineWidth = 6;
-      } else if (isActiveArmConnection) {
-        ctx.strokeStyle = '#38bdf8'; // Sky blue for active arm
-        ctx.shadowColor = '#38bdf8';
-        ctx.shadowBlur = 8;
-        ctx.lineWidth = 5;
-      } else if (isArmConnection) {
-        ctx.strokeStyle = '#60a5fa';
-        ctx.shadowColor = '#3b82f6';
-        ctx.shadowBlur = 4;
-        ctx.lineWidth = 4;
+      if (appMode === 'jump') {
+        // In Jump Mode, highlight lower limb connections
+        if (isLegConnection) {
+          ctx.strokeStyle = '#a855f7'; // Neon Purple
+          ctx.shadowColor = '#a855f7';
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 5;
+        } else {
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = 3;
+        }
       } else {
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
-        ctx.shadowBlur = 0;
-        ctx.lineWidth = 3;
+        // In Basketball Mode, highlight shoulder & arm connections
+        if (isActiveArmConnection && isAboveThreshold) {
+          ctx.strokeStyle = '#22c55e'; // Green when successful
+          ctx.shadowColor = '#22c55e';
+          ctx.shadowBlur = 12;
+          ctx.lineWidth = 6;
+        } else if (isActiveArmConnection) {
+          ctx.strokeStyle = '#38bdf8'; // Sky blue for active arm
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 8;
+          ctx.lineWidth = 5;
+        } else if (isArmConnection) {
+          ctx.strokeStyle = '#60a5fa';
+          ctx.shadowColor = '#3b82f6';
+          ctx.shadowBlur = 4;
+          ctx.lineWidth = 4;
+        } else {
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = 3;
+        }
       }
 
       ctx.stroke();
@@ -136,70 +159,115 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       const x = getX(p.x);
       const y = getY(p.y);
 
-      const isTargetActiveJoint =
+      const isLegJoint =
+        idx === POSE_LANDMARKS.LEFT_HIP ||
+        idx === POSE_LANDMARKS.RIGHT_HIP ||
+        idx === POSE_LANDMARKS.LEFT_KNEE ||
+        idx === POSE_LANDMARKS.RIGHT_KNEE ||
+        idx === POSE_LANDMARKS.LEFT_ANKLE ||
+        idx === POSE_LANDMARKS.RIGHT_ANKLE;
+
+      const isTargetActiveArmJoint =
         (activeArm === 'left' &&
           (idx === POSE_LANDMARKS.LEFT_SHOULDER || idx === POSE_LANDMARKS.LEFT_ELBOW || idx === POSE_LANDMARKS.LEFT_WRIST)) ||
         (activeArm === 'right' &&
           (idx === POSE_LANDMARKS.RIGHT_SHOULDER || idx === POSE_LANDMARKS.RIGHT_ELBOW || idx === POSE_LANDMARKS.RIGHT_WRIST));
 
+      const isHighlightedJoint = appMode === 'jump' ? isLegJoint : isTargetActiveArmJoint;
+
       // Outer glow circle
       ctx.beginPath();
-      ctx.arc(x, y, isTargetActiveJoint ? 8 : 5, 0, Math.PI * 2);
-      ctx.fillStyle = isTargetActiveJoint
-        ? isAboveThreshold
+      ctx.arc(x, y, isHighlightedJoint ? 8 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = isHighlightedJoint
+        ? appMode === 'jump'
+          ? '#c084fc'
+          : isAboveThreshold
           ? '#22c55e'
           : '#38bdf8'
         : '#f8fafc';
-      ctx.shadowColor = isTargetActiveJoint ? (isAboveThreshold ? '#22c55e' : '#38bdf8') : '#94a3b8';
-      ctx.shadowBlur = isTargetActiveJoint ? 14 : 4;
+      ctx.shadowColor = isHighlightedJoint
+        ? appMode === 'jump'
+          ? '#c084fc'
+          : isAboveThreshold
+          ? '#22c55e'
+          : '#38bdf8'
+        : '#94a3b8';
+      ctx.shadowBlur = isHighlightedJoint ? 14 : 4;
       ctx.fill();
 
       // Inner white core
       ctx.beginPath();
-      ctx.arc(x, y, isTargetActiveJoint ? 4 : 2.5, 0, Math.PI * 2);
+      ctx.arc(x, y, isHighlightedJoint ? 4 : 2.5, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff';
       ctx.shadowBlur = 0;
       ctx.fill();
     });
 
-    // 3. Draw Shoulder Angle Arc & Numeric HUD Badge
+    // 3. Draw Angle HUD Badges
     if (angleData) {
-      const shoulderIdx =
-        activeArm === 'left' ? POSE_LANDMARKS.LEFT_SHOULDER : POSE_LANDMARKS.RIGHT_SHOULDER;
-      const shoulderPt = landmarks[shoulderIdx];
+      if (appMode === 'jump') {
+        // Draw Knee Angle Badge near Knee (Hip -> Knee -> Ankle)
+        const kneeIdx = POSE_LANDMARKS.RIGHT_KNEE;
+        const kneePt = landmarks[kneeIdx] || landmarks[POSE_LANDMARKS.LEFT_KNEE];
 
-      if (shoulderPt && (shoulderPt.visibility === undefined || shoulderPt.visibility >= 0.4)) {
-        const sx = getX(shoulderPt.x);
-        const sy = getY(shoulderPt.y);
+        if (kneePt && (kneePt.visibility === undefined || kneePt.visibility >= 0.3)) {
+          const kx = getX(kneePt.x);
+          const ky = getY(kneePt.y);
 
-        // Draw Angle Badge above active shoulder
-        const badgeX = activeArm === 'left' ? sx - 65 : sx + 15;
-        const badgeY = sy - 25;
+          const badgeX = kx + 15;
+          const badgeY = ky - 10;
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.strokeStyle = isAboveThreshold ? '#22c55e' : '#38bdf8';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.roundRect(badgeX, badgeY - 18, 68, 24, 6);
-        ctx.fill();
-        ctx.stroke();
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(badgeX, badgeY - 18, 92, 24, 6);
+          ctx.fill();
+          ctx.stroke();
 
-        ctx.fillStyle = isAboveThreshold ? '#4ade80' : '#e0f2fe';
-        ctx.font = 'bold 13px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${angleData.activeAngle}°`, badgeX + 34, badgeY - 2);
+          ctx.fillStyle = '#f3e8ff';
+          ctx.font = 'bold 12px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`Knee: ${angleData.activeKneeAngle}°`, badgeX + 46, badgeY - 2);
+        }
+      } else {
+        // Draw Shoulder Angle Badge above active shoulder
+        const shoulderIdx =
+          activeArm === 'left' ? POSE_LANDMARKS.LEFT_SHOULDER : POSE_LANDMARKS.RIGHT_SHOULDER;
+        const shoulderPt = landmarks[shoulderIdx];
 
-        // Draw decorative subtle target threshold arc
-        ctx.beginPath();
-        ctx.arc(sx, sy, 32, 0, Math.PI * 2);
-        ctx.strokeStyle = isAboveThreshold ? 'rgba(34, 197, 94, 0.4)' : 'rgba(56, 189, 248, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]); // Reset
+        if (shoulderPt && (shoulderPt.visibility === undefined || shoulderPt.visibility >= 0.4)) {
+          const sx = getX(shoulderPt.x);
+          const sy = getY(shoulderPt.y);
+
+          const badgeX = activeArm === 'left' ? sx - 65 : sx + 15;
+          const badgeY = sy - 25;
+
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.strokeStyle = isAboveThreshold ? '#22c55e' : '#38bdf8';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.roundRect(badgeX, badgeY - 18, 68, 24, 6);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = isAboveThreshold ? '#4ade80' : '#e0f2fe';
+          ctx.font = 'bold 13px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${angleData.activeAngle}°`, badgeX + 34, badgeY - 2);
+
+          // Decorative subtle target threshold arc
+          ctx.beginPath();
+          ctx.arc(sx, sy, 32, 0, Math.PI * 2);
+          ctx.strokeStyle = isAboveThreshold ? 'rgba(34, 197, 94, 0.4)' : 'rgba(56, 189, 248, 0.3)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]); // Reset
+        }
       }
     }
-  }, [landmarks, angleData, thresholdAngle, width, height, isMirrored]);
+  }, [landmarks, angleData, thresholdAngle, width, height, isMirrored, appMode]);
 
   return (
     <canvas

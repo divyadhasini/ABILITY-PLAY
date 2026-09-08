@@ -12,6 +12,9 @@ export interface JointAngleData {
   leftElbowAngle: number;
   rightElbowAngle: number;
   activeSide: 'left' | 'right';
+  leftKneeAngle: number;
+  rightKneeAngle: number;
+  activeKneeAngle: number;
 }
 
 export interface PersonalBaseline {

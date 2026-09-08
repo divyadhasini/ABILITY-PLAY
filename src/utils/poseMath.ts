@@ -1,4 +1,4 @@
-import { NormalizedLandmark, JointAngleData } from '../types';
+import type { NormalizedLandmark, JointAngleData } from '../types';
 
 export const POSE_LANDMARKS = {
   NOSE: 0,
@@ -18,9 +18,9 @@ export const POSE_LANDMARKS = {
 
 /**
  * Calculates the interior 2D angle (in degrees) at vertex point B between vectors BA and BC.
- * @param a First point (e.g., Shoulder)
- * @param b Vertex point (e.g., Elbow)
- * @param c Third point (e.g., Wrist)
+ * @param a First point (e.g., Hip or Shoulder)
+ * @param b Vertex point (e.g., Knee or Elbow)
+ * @param c Third point (e.g., Ankle or Wrist)
  * @returns Angle in degrees [0, 180]
  */
 export function calculateAngle(
@@ -63,7 +63,20 @@ export function calculateShoulderElevation(
 }
 
 /**
- * Extracts and calculates all joint angles from landmarks.
+ * Calculates knee joint angle (Hip -> Knee -> Ankle).
+ * Standing straight = ~170°-180°. Squatting / Knee Flexion = ~90°-120°.
+ */
+export function calculateKneeAngle(
+  hip: NormalizedLandmark,
+  knee: NormalizedLandmark,
+  ankle: NormalizedLandmark
+): number {
+  if (!hip || !knee || !ankle) return 0;
+  return calculateAngle(hip, knee, ankle);
+}
+
+/**
+ * Extracts and calculates all joint angles (Shoulder, Elbow, Knee) from pose landmarks.
  */
 export function computeJointAngles(landmarks: NormalizedLandmark[]): JointAngleData | null {
   if (!landmarks || landmarks.length < 29) return null;
@@ -76,8 +89,12 @@ export function computeJointAngles(landmarks: NormalizedLandmark[]): JointAngleD
   const rWrist = landmarks[POSE_LANDMARKS.RIGHT_WRIST];
   const lHip = landmarks[POSE_LANDMARKS.LEFT_HIP];
   const rHip = landmarks[POSE_LANDMARKS.RIGHT_HIP];
+  const lKnee = landmarks[POSE_LANDMARKS.LEFT_KNEE];
+  const rKnee = landmarks[POSE_LANDMARKS.RIGHT_KNEE];
+  const lAnkle = landmarks[POSE_LANDMARKS.LEFT_ANKLE];
+  const rAnkle = landmarks[POSE_LANDMARKS.RIGHT_ANKLE];
 
-  // Primary shoulder angles (Torso to arm abduction/elevation)
+  // Primary shoulder elevation angles (Torso to arm abduction/elevation)
   const leftElevation = calculateShoulderElevation(lHip, lShoulder, lElbow);
   const rightElevation = calculateShoulderElevation(rHip, rShoulder, rElbow);
 
@@ -85,7 +102,12 @@ export function computeJointAngles(landmarks: NormalizedLandmark[]): JointAngleD
   const leftElbowAngle = calculateAngle(lShoulder, lElbow, lWrist);
   const rightElbowAngle = calculateAngle(rShoulder, rElbow, rWrist);
 
-  // Determine active arm by which arm is raised higher or has greater elevation
+  // Lower-limb knee angles: angle(Hip, Knee, Ankle)
+  const leftKneeAngle = calculateKneeAngle(lHip, lKnee, lAnkle);
+  const rightKneeAngle = calculateKneeAngle(rHip, rKnee, rAnkle);
+  const activeKneeAngle = Math.round((leftKneeAngle + rightKneeAngle) / 2) || leftKneeAngle || rightKneeAngle;
+
+  // Determine active arm by which arm is raised higher
   const activeSide: 'left' | 'right' = rightElevation >= leftElevation ? 'right' : 'left';
   const activeAngle = activeSide === 'right' ? rightElevation : leftElevation;
 
@@ -96,6 +118,9 @@ export function computeJointAngles(landmarks: NormalizedLandmark[]): JointAngleD
     leftElbowAngle,
     rightElbowAngle,
     activeSide,
+    leftKneeAngle,
+    rightKneeAngle,
+    activeKneeAngle,
   };
 }
 
@@ -117,7 +142,6 @@ export function checkUserInFrame(landmarks: NormalizedLandmark[] | null): boolea
   for (const idx of requiredIndices) {
     const pt = landmarks[idx];
     if (!pt) return false;
-    // Normalized coordinates must be roughly within [0.05, 0.95]
     if (pt.x < 0.02 || pt.x > 0.98 || pt.y < 0.02 || pt.y > 0.98) return false;
     if (pt.visibility !== undefined && pt.visibility < 0.4) return false;
   }

@@ -1,12 +1,13 @@
 import React from 'react';
-import type { AdaptiveGameParameters, SessionStats, JointAngleData } from '../types';
-import { Trophy, Target, Flame, Zap, Compass, ChevronRight } from 'lucide-react';
+import type { AdaptiveGameParameters, SessionStats, JointAngleData, AppMode } from '../types';
+import { Trophy, Target, Flame, Zap, Compass, ChevronRight, Activity } from 'lucide-react';
 
 interface MetricsPanelProps {
   gameParams: AdaptiveGameParameters;
   sessionStats: SessionStats;
   angleData: JointAngleData | null;
   personalBaseline: number;
+  appMode?: AppMode;
 }
 
 export const MetricsPanel: React.FC<MetricsPanelProps> = ({
@@ -14,9 +15,13 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
   sessionStats,
   angleData,
   personalBaseline,
+  appMode = 'basketball',
 }) => {
-  const activeAngle = angleData ? angleData.activeAngle : 0;
-  const progressRatio = Math.min(100, Math.round((activeAngle / gameParams.successThresholdAngle) * 100));
+  const isJumpingMode = appMode === 'jump';
+  const activeAngle = angleData ? (isJumpingMode ? angleData.activeKneeAngle : angleData.activeAngle) : 0;
+  const progressRatio = isJumpingMode
+    ? Math.min(100, Math.round((activeAngle / 180) * 100))
+    : Math.min(100, Math.round((activeAngle / gameParams.successThresholdAngle) * 100));
 
   return (
     <div className="w-full flex flex-col gap-3.5">
@@ -37,19 +42,27 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
         {/* 4 Stat Cards Grid */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Live Shoulder Angle */}
+          {/* Live Joint Angle (Shoulder or Knee based on mode) */}
           <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-              <Compass size={14} className="text-sky-400" />
-              <span>Shoulder Angle</span>
+              {isJumpingMode ? <Activity size={14} className="text-purple-400" /> : <Compass size={14} className="text-sky-400" />}
+              <span>{isJumpingMode ? 'Knee Angle (Hip-Knee-Ankle)' : 'Shoulder Angle'}</span>
             </div>
             <div className="mt-2 flex items-baseline gap-1">
-              <span className="text-2xl sm:text-3xl font-black text-sky-300">{activeAngle}°</span>
-              <span className="text-[10px] text-slate-400">({angleData?.activeSide || 'arm'})</span>
+              <span className={`text-2xl sm:text-3xl font-black ${isJumpingMode ? 'text-purple-300' : 'text-sky-300'}`}>
+                {activeAngle}°
+              </span>
+              <span className="text-[10px] text-slate-400">
+                {isJumpingMode ? '(L/R Knee)' : `(${angleData?.activeSide || 'arm'})`}
+              </span>
             </div>
             <div className="w-full bg-slate-700/60 rounded-full h-1.5 mt-2 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-sky-500 to-cyan-300 rounded-full transition-all duration-150"
+                className={`h-full rounded-full transition-all duration-150 ${
+                  isJumpingMode
+                    ? 'bg-gradient-to-r from-purple-500 to-cyan-300'
+                    : 'bg-gradient-to-r from-sky-500 to-cyan-300'
+                }`}
                 style={{ width: `${Math.min(100, (activeAngle / 180) * 100)}%` }}
               />
             </div>
@@ -89,7 +102,7 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
           <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col justify-between">
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
               <Trophy size={14} className="text-emerald-400" />
-              <span>Repetitions</span>
+              <span>{isJumpingMode ? 'Jumps Scored' : 'Repetitions'}</span>
             </div>
             <div className="mt-2 flex items-baseline gap-1">
               <span className="text-2xl sm:text-3xl font-black text-emerald-300">
@@ -108,16 +121,28 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
         {/* Adaptive Threshold Target Indicator */}
         <div className="p-3 rounded-xl bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-500/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target size={18} className="text-sky-400 shrink-0" />
+            <Target size={18} className={isJumpingMode ? 'text-purple-400 shrink-0' : 'text-sky-400 shrink-0'} />
             <div>
-              <div className="text-xs font-bold text-white">Movement Trigger Goal</div>
+              <div className="text-xs font-bold text-white">
+                {isJumpingMode ? 'Lower-Limb Rehabilitation Engine' : 'Movement Trigger Goal'}
+              </div>
               <div className="text-[11px] text-slate-400">
-                Raise arm to <strong className="text-sky-300">{gameParams.successThresholdAngle}°</strong> to execute basketball throw
+                {isJumpingMode ? (
+                  <span>
+                    Knee Flexion <strong className="text-purple-300">Hip → Knee → Ankle</strong> with vertical lift triggers jump action
+                  </span>
+                ) : (
+                  <span>
+                    Raise arm to <strong className="text-sky-300">{gameParams.successThresholdAngle}°</strong> to execute basketball throw
+                  </span>
+                )}
               </div>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-sm font-bold text-sky-300">{progressRatio}%</span>
+            <span className={`text-sm font-bold ${isJumpingMode ? 'text-purple-300' : 'text-sky-300'}`}>
+              {progressRatio}%
+            </span>
           </div>
         </div>
       </div>
