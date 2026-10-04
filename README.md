@@ -55,7 +55,7 @@ SESSION TELEMETRY & PROGRESSIVE GAMIFICATION (Score, Streaks, % of Baseline)
 - Computes their **Personal Baseline Range of Motion (e.g. 118°)**.
 - **No universal "one-size-fits-all" score**: Every child's gameplay is personalized to their own biomechanics.
 
-### 4. 🎛️ Deterministic Adaptive Engine
+### 4.  Deterministic Adaptive Engine
 The game parameters deterministically adjust based on the child's personal baseline:
 - **Low Baseline (< 80° - Level 1)**: Larger target hoop (96px), lower target height (48%), forgiving shot timing (1400ms), 75% trigger threshold.
 - **Moderate Baseline (80° - 115° - Level 2)**: Medium hoop (82px), standard court height (38%), balanced flight speed.
@@ -182,5 +182,5 @@ ABILITY-PLAY/
 
 ---
 
-## 📄 License
+## License
 MIT License. Built for pediatric rehabilitation through play.
