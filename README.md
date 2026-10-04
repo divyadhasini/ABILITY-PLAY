@@ -1,4 +1,4 @@
-# 🏀 AbilityPlay
+#  AbilityPlay
 
 > **“Turning rehabilitation movements into sports experiences children want to play.”**
 
@@ -6,7 +6,7 @@ AbilityPlay is an AI-powered computer-vision rehabilitation game prototype. It t
 
 ---
 
-## 🌟 Core MVP Innovation
+##  Core MVP Innovation
 
 > **A CHILD'S REAL BODY MOVEMENT CONTROLS THE GAME.**
 
@@ -30,9 +30,9 @@ SESSION TELEMETRY & PROGRESSIVE GAMIFICATION (Score, Streaks, % of Baseline)
 
 ---
 
-## 🎯 Key Features
+##  Key Features
 
-### 1. 📷 Real-Time Computer Vision Tracking
+### 1. Real-Time Computer Vision Tracking
 - Built with **`@mediapipe/tasks-vision` Pose Landmarker**.
 - Runs **100% locally in the browser** at high frame rates (30–60 FPS) with zero frame uploads to external cloud APIs for strict child privacy.
 - Tracks:
@@ -43,14 +43,14 @@ SESSION TELEMETRY & PROGRESSIVE GAMIFICATION (Score, Streaks, % of Baseline)
   - **Knees and Ankles**
 - Real-time skeleton overlay with glowing active joint vectors and live angular degree HUD callouts.
 
-### 2. 📐 Joint Angle Vector Mathematics
+### 2. Joint Angle Vector Mathematics
 - Calculates joint angles (Shoulder & Knee) using vector dot-product geometry:
   $$\vec{BA} = A - B, \quad \vec{BC} = C - B$$
   $$\cos(\theta) = \frac{\vec{BA} \cdot \vec{BC}}{\|\vec{BA}\| \|\vec{BC}\|}, \quad \theta = \arccos(\text{clamp}(\cos(\theta), -1, 1)) \times \frac{180}{\pi}$$
 - **Adaptive Basketball**: Computes **Shoulder Elevation / Arm Abduction** angle between Torso $\rightarrow$ Shoulder and Shoulder $\rightarrow$ Elbow/Wrist.
 - **Jump Mode**: Computes **Knee Joint Angle** $\text{Angle}(\text{Hip}, \text{Knee}, \text{Ankle})$ measuring dynamic knee flexion (squat dip) and extension during jump takeoff.
 
-### 3. ⚖️ Personal Baseline Calibration
+### 3. Personal Baseline Calibration
 - When clicking **"Start Assessment"**, a 6-second calibration routine tracks the child's natural, comfortable movement.
 - Computes their **Personal Baseline Range of Motion (e.g. 118°)**.
 - **No universal "one-size-fits-all" score**: Every child's gameplay is personalized to their own biomechanics.
@@ -62,16 +62,16 @@ The game parameters deterministically adjust based on the child's personal basel
 - **High Baseline (116° - 145° - Level 3)**: Precision target (70px), high hoop (28%), active stretch challenge.
 - **Overhead Mastery (> 145° - Level 4)**: Compact rim (62px), high elevated backboard (20%), swift timing.
 
-### 5. 🏀 Adaptive Basketball Rehabilitation Game
+### 5. Adaptive Basketball Rehabilitation Game
 - Real physical arm raises trigger the basketball shot in real time.
 - Smooth parabolic ball physics, net swish animation, celebration confetti, and synthesized Web Audio sound effects.
 - Dynamic stretch progress bar shows how close the child is to releasing their next shot.
 
-### 6. 🏃 Mini-Demo: Jump Mode (Lower-Limb Rehabilitation)
+### 6. Mini-Demo: Jump Mode (Lower-Limb Rehabilitation)
 - Proves that the **same body movement engine** powers multiple sport experiences.
 - Tracks **Knee Flexion/Extension Angles** $\text{Angle}(\text{Hip}, \text{Knee}, \text{Ankle})$ alongside vertical hip & shoulder momentum to detect physical jumps and bounce the on-screen runner.
 
-### 7. 📊 Session Performance Analytics
+### 7. Session Performance Analytics
 - Displays at the end of each rehabilitation session:
   - Total Repetitions & Successful Actions
   - Success Rate %
@@ -79,13 +79,13 @@ The game parameters deterministically adjust based on the child's personal basel
   - Motivational Progress Statement: *“Your movement reached 112% of your starting baseline.”*
   - Clear medical prototype disclaimer.
 
-### 8. 🛠️ Demo Mode & Graceful Error Handling
+### 8.  Demo Mode & Graceful Error Handling
 - Includes a dedicated **Demo Mode** toggle for judges, therapists, or environments without active webcams, simulating real biomechanical motion cycles.
 - Gracefully handles camera permission denials, missing hardware, model load fallbacks, and posture out-of-frame notifications.
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Node.js (v18 or higher)
@@ -121,7 +121,7 @@ npm run preview
 
 ---
 
-## 🎮 How to Test the MVP
+##  How to Test the MVP
 
 1. **Allow Webcam Access**: Grant camera permission when prompted (or toggle **Demo Mode**).
 2. **Review Skeleton Tracking**: Observe your skeleton and live shoulder angle degrees on the left panel.
@@ -140,7 +140,7 @@ npm run preview
 
 ---
 
-## 📁 Project Architecture
+##  Project Architecture
 
 ```
 ABILITY-PLAY/
@@ -174,11 +174,11 @@ ABILITY-PLAY/
 
 ---
 
-## 🔮 Future Product Roadmap
-- 🩺 **Therapist Dashboard**: Longitudinal Range of Motion (ROM) charts, compensation detection, and prescription protocols.
-- 🎮 **Multiplayer Rehabilitation**: Cooperative games for pediatric clinics and sibling play.
-- 🦾 **Multi-Joint Sport Modules**: Ankle dorsiflexion soccer kicks, bilateral arm rowing, and trunk balance surfing.
-- 📱 **Mobile & Tablet Apps**: iOS / Android native support with on-device CoreML / NNAPI acceleration.
+##  Future Product Roadmap
+-  **Therapist Dashboard**: Longitudinal Range of Motion (ROM) charts, compensation detection, and prescription protocols.
+-  **Multiplayer Rehabilitation**: Cooperative games for pediatric clinics and sibling play.
+-  **Multi-Joint Sport Modules**: Ankle dorsiflexion soccer kicks, bilateral arm rowing, and trunk balance surfing.
+-  **Mobile & Tablet Apps**: iOS / Android native support with on-device CoreML / NNAPI acceleration.
 
 ---
 
